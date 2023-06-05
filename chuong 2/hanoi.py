@@ -5,8 +5,6 @@ def hanoi(n, cotdau, cotgiua, cotdich):
     hanoi(n - 1, cotdau, cotdich, cotgiua)
     print("Dia", n, "tu", cotdau, "sang", cotdich)
     hanoi(n - 1, cotgiua, cotdau, cotdich)
-
-
 def main():
     n = abs(int(input("Nhap so dia n: ")))
     hanoi(n, "A", "B", "C")
