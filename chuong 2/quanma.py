@@ -1,108 +1,110 @@
 import pygame
 
-# Hằng số màu sắc
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
+# 8 trường hợp có thể di chuyển của quân mã
+# Ví dụ 2 giá trị x, y đầu tiên = -2, -1 có nghĩa là di chuyển 2 ô về bên trái và 1 ô lên trên
+kx_move = [-2, -2, -1, -1, 1, 1, 2, 2]
+ky_move = [-1, 1, -2, 2, -2, 2, -1, 1]
 
-def draw_chessboard(screen, board_size):
-    square_size = screen.get_width() // board_size
-    for row in range(board_size):
-        for col in range(board_size):
-            color = WHITE if (row + col) % 2 == 0 else BLACK
-            pygame.draw.rect(screen, color, (col * square_size, row * square_size, square_size, square_size))
 
-def draw_knight(screen, x, y, board_size):
-    square_size = screen.get_width() // board_size
-    pygame.draw.circle(screen, GREEN, (x * square_size + square_size // 2, y * square_size + square_size // 2), square_size // 3)
-
-def draw_path(screen, path, board_size):
-    square_size = screen.get_width() // board_size
-    for i in range(len(path) - 1):
-        x1, y1 = path[i]
-        x2, y2 = path[i + 1]
-        pygame.draw.line(screen, RED, (x1 * square_size + square_size // 2, y1 * square_size + square_size // 2),
-                         (x2 * square_size + square_size // 2, y2 * square_size + square_size // 2), 4)
-
-def display_knight_tour(board_size, knight_path):
+def make_screen(n):
+    # Khởi tạo cửa sổ 400x400 với tên cửa sổ là Result
+    # biến size là đối tượng trong cửa sổ, ta sẽ vẽ lên trên đối tượng này
+    X = 400
+    Y = 400
     pygame.init()
+    scrn_display = pygame.display
+    scrn_display.set_caption("Result")
+    size = scrn_display.set_mode([X, Y])
 
-    # Kích thước màn hình
-    screen_size = 600
-    screen = pygame.display.set_mode((screen_size, screen_size))
-    pygame.display.set_caption("Knight's Tour")
+    # Khởi tạo biến chỉ số bước m
+    m = 0
 
-    clock = pygame.time.Clock()
-    running = True
-
-    while running:
+    window = True
+    # Vòng lặp vĩnh cửu
+    while window:
         for event in pygame.event.get():
+            # Khi thoát khỏi cửa sổ, vòng lặp kết thúc
             if event.type == pygame.QUIT:
-                running = False
+                window = False
 
-        screen.fill(WHITE)
+        # Kiểm tra nếu số bước nhỏ hơn số ô cờ
+        while m < n*n:
+            pygame.time.wait(500)  # Đợi 0.5s trước khi cập nhật màn hình
+            size.fill((210, 210, 210))  # Lắp đầy màn hình bằng màu xám sáng
+            # Vòng lặp này vẽ các ô vuông màu đen so le với nhau
+            # Kết hợp với màu nền khi nãy, ta có một bàn cờ vua
+            for i in range(n):
+                for j in range(n):
+                    if (i + j) % 2 == 0:
+                        pygame.draw.rect(size, (0, 0, 0), pygame.Rect((X / n) * i, (Y / n) * j, X / n, Y / n))
+            # Vẽ các hình tròn màu xanh lá, biểu thị rằng ô cờ đó đã được đi qua
+            for k in range(m):
+                pygame.draw.circle(size, (0, 255, 0), ((korder_y[k]+0.5)*(Y/n), (korder_x[k] + 0.5) * (X / n)), X / n / 3)
+            # Vẽ hình tròn màu đỏ. biểu thị nước đi hiện tại của quân mã
+            pygame.draw.circle(size, (255, 0, 0), ((korder_y[m] + 0.5) * (Y / n), (korder_x[m] + 0.5) * (X / n)), X / n / 3)
+            # Cập nhật màn hình
+            # event.get() tránh tràn bộ nhớ
+            pygame.display.flip()
+            pygame.event.get()
+            # +1 bước
+            m += 1
 
-        draw_chessboard(screen, board_size)
-        draw_path(screen, knight_path, board_size)
-
-        pygame.display.flip()
-        clock.tick(60)
-
+    # Kết thúc
     pygame.quit()
 
-# Sử dụng giải thuật mã đi tuần để tìm đường đi
-def solve_knight_tour(board_size):
-    # Khởi tạo bàn cờ và danh sách đường đi của con mã
-    board = [[0] * board_size for _ in range(board_size)]
-    knight_path = []
-
-    # Các bước di chuyển của con mã
-    move_x = [2, 1, -1, -2, -2, -1, 1, 2]
-    move_y = [1, 2, 2, 1, -1, -2, -2, -1]
-
-    # Hàm kiểm tra ô trên bàn cờ có hợp lệ để di chuyển tới hay không
-    def is_valid_move(x, y):
-        return 0 <= x < board_size and 0 <= y < board_size and board[x][y] == 0
-
-    # Hàm đệ quy để thực hiện mã đi tuần
-    def knight_tour(x, y, move_number):
-        # Đánh dấu ô hiện tại là đã đi qua
-        board[x][y] = move_number
-        # Thêm tọa độ ô hiện tại vào danh sách đường đi
-        knight_path.append((x, y))
-
-        # Kiểm tra nếu đã đi hết các ô trên bàn cờ
-        if move_number == board_size * board_size:
-            return True
-
-        # Thử từng bước di chuyển tiếp theo
-        for i in range(len(move_x)):
-            next_x = x + move_x[i]
-            next_y = y + move_y[i]
-
-            if is_valid_move(next_x, next_y):
-                if knight_tour(next_x, next_y, move_number + 1):
-                    return True
-
-        # Không tìm được đường đi hợp lệ từ ô hiện tại, quay lui
-        board[x][y] = 0
-        knight_path.pop()
-        return False
-
-    # Bắt đầu từ ô (0, 0)
-    start_x = 0
-    start_y = 0
-    knight_tour(start_x, start_y, 1)
-
-    return knight_path
+# Vẽ bàn cờ
+def result():
+    for i in range(n):
+        for j in range(n):
+            print(chess[i][j], end=" ")  # In giá trị, giá trị đó biểu hiện bước đi của quân mã
+            korder_x[chess[i][j] - 1] = i  # Lưu vị trí x vào 1 list tạm để vẽ cửa sổ
+            korder_y[chess[i][j] - 1] = j  # Lưu vị trí y vào 1 list tạm để vẽ cửa sổ
+        print()
 
 
-# Kích thước bàn cờ nhập từ bàn phím
-board_size = int(input("Nhập kích thước bàn cờ: "))
+def move(x, y):
+    global step
+    step += 1 # Tăng số bước lên 1
+    chess[y][x] = step
+    for i in range(8):  # Lặp lại 8 trường hợp quân mã có thể đi
+        if step == n*n:   # Kiểm tra nếu số bước vượt quá số vị trí của bàn cờ. Nếu có thì kết thúc chương trình
+            print("Buoc di chuyen cua quan ma:")
+            result()
+            make_screen(n)
+            quit()
+        # Di chuyển đến vị trí mới
+        u = x + kx_move[i]
+        v = y + ky_move[i]
+        if (u >= 0) and (u < n) and (v >= 0) and (v < n) and (chess[v][u] == 0):
+            # Kiểm tra nếu vị trí mới nằm trong bàn cờ và vị trí đó chưa đi qua
+            move(u, v)
+    # Lùi lại 1 bước nếu không tìm được bước đi tiếp theo
+    step -= 1
+    chess[y][x] = 0  # Reset lại vị trí ô cờ thành ô chưa đi qua
 
-# Giải thuật mã đi tuần để tìm đường đi
-knight_path = solve_knight_tour(board_size)
 
-# Hiển thị đường đi của con mã trên màn hình
-display_knight_tour(board_size, knight_path)
+flag = False
+
+
+n = abs(int(input("Nhap so n (ban co nxn): ")))
+
+
+# Khởi tạo số bước là 0 và tạo bàn cờ trống (tất cả các phần tử bằng 0)
+# Hai danh sách dưới dùng để lưu nước đi của quân mã với thứ tự (index) là chỉ số bước di chuyển
+step = 0
+chess = [[0 for i in range(n)] for j in range(n)]
+korder_x = n*n*[0]
+korder_y = n*n*[0]
+
+
+while not flag:
+    print("HELP: Vi tri goc tren cung ben trai la x, y = (0, 0)")
+    a = abs(int(input("Nhap vi tri xuat phat x: ")))
+    b = abs(int(input("Nhap vi tri xuat phat y: ")))
+    # Kiểm tra nếu vị trí ban đầu nằm ngoài bàn cờ. Nếu nằm ngoài người dùng phải nhập lại vị trí
+    if a < n and b < n:
+        flag = True
+        move(a, b)
+        print("No move")
+    else:
+        print("x hoac y vuot qua so luong quy dinh!")
